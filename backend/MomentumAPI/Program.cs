@@ -125,6 +125,7 @@ builder.Services.AddCors(options =>
 // Register application services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICheckinService, CheckinService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
