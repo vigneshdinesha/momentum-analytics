@@ -1,0 +1,6 @@
+@MomentumAPI_HostAddress = http://localhost:5254
+
+GET {{MomentumAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
