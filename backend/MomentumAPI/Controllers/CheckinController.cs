@@ -25,17 +25,15 @@ namespace MomentumAPI.Controllers
         }
 
         /// <summary>
-        /// Create a new daily check-in or update existing one for the same date
+        /// Create a new check-in (allows multiple check-ins per day)
         /// </summary>
         /// <param name="request">Check-in data including sleep, energy, mood, exercise, and productivity metrics</param>
-        /// <returns>Created or updated check-in with ID and timestamps</returns>
-        /// <response code="200">Check-in updated successfully</response>
+        /// <returns>Created check-in with ID and timestamps</returns>
         /// <response code="201">Check-in created successfully</response>
         /// <response code="400">Invalid request data or validation errors</response>
         /// <response code="401">Unauthorized - invalid or missing JWT token</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(CheckinResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CheckinResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -53,20 +51,11 @@ namespace MomentumAPI.Controllers
                 var userId = GetUserIdFromClaims();
                 _logger.LogInformation("Creating check-in for user {UserId} on date {Date}", userId, request.Date);
 
-                // Check if check-in already exists for this date
-                var existingCheckin = await _checkinService.GetCheckinByDateAsync(userId, request.Date);
-                var response = await _checkinService.CreateOrUpdateCheckinAsync(userId, request);
+                // Create new check-in (allows multiple per day)
+                var response = await _checkinService.CreateCheckinAsync(userId, request);
 
-                if (existingCheckin != null)
-                {
-                    _logger.LogInformation("Updated existing check-in {CheckinId} for user {UserId}", response.Id, userId);
-                    return Ok(response);
-                }
-                else
-                {
-                    _logger.LogInformation("Created new check-in {CheckinId} for user {UserId}", response.Id, userId);
-                    return CreatedAtAction(nameof(GetCheckinByDate), new { date = request.Date.ToString("yyyy-MM-dd") }, response);
-                }
+                _logger.LogInformation("Created new check-in {CheckinId} for user {UserId}", response.Id, userId);
+                return CreatedAtAction(nameof(GetCheckinById), new { id = response.Id }, response);
             }
             catch (ArgumentException ex)
             {
@@ -81,22 +70,58 @@ namespace MomentumAPI.Controllers
         }
 
         /// <summary>
-        /// Get check-in for a specific date
+        /// Get check-in by ID
         /// </summary>
-        /// <param name="date">Date in YYYY-MM-DD format</param>
-        /// <returns>Check-in data for the specified date</returns>
+        /// <param name="id">ID of the check-in to retrieve</param>
+        /// <returns>Check-in data for the specified ID</returns>
         /// <response code="200">Check-in found and returned</response>
-        /// <response code="400">Invalid date format</response>
         /// <response code="401">Unauthorized - invalid or missing JWT token</response>
-        /// <response code="404">No check-in found for the specified date</response>
+        /// <response code="404">No check-in found for the specified ID or user doesn't own it</response>
         /// <response code="500">Internal server error</response>
-        [HttpGet("{date}")]
+        [HttpGet("id/{id:int}")]
         [ProducesResponseType(typeof(CheckinResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<CheckinResponse>> GetCheckinByDate(string date)
+        public async Task<ActionResult<CheckinResponse>> GetCheckinById(int id)
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                _logger.LogInformation("Retrieving check-in {CheckinId} for user {UserId}", id, userId);
+
+                var checkin = await _checkinService.GetCheckinByIdAsync(userId, id);
+
+                if (checkin == null)
+                {
+                    _logger.LogInformation("Check-in {CheckinId} not found for user {UserId} or user doesn't own it", id, userId);
+                    return NotFound(new { message = $"No check-in found with ID {id} or you don't have permission to access it" });
+                }
+
+                return Ok(checkin);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving check-in {CheckinId}", id);
+                return StatusCode(500, new { message = "An error occurred while retrieving the check-in" });
+            }
+        }
+
+        /// <summary>
+        /// Get all check-ins for a specific date
+        /// </summary>
+        /// <param name="date">Date in YYYY-MM-DD format</param>
+        /// <returns>List of check-ins for the specified date</returns>
+        /// <response code="200">Check-ins found and returned (may be empty list)</response>
+        /// <response code="400">Invalid date format</response>
+        /// <response code="401">Unauthorized - invalid or missing JWT token</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("date/{date}")]
+        [ProducesResponseType(typeof(List<CheckinResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<CheckinResponse>>> GetCheckinsByDate(string date)
         {
             try
             {
@@ -107,7 +132,48 @@ namespace MomentumAPI.Controllers
                 }
 
                 var userId = GetUserIdFromClaims();
-                _logger.LogInformation("Retrieving check-in for user {UserId} on date {Date}", userId, parsedDate);
+                _logger.LogInformation("Retrieving all check-ins for user {UserId} on date {Date}", userId, parsedDate);
+
+                var checkins = await _checkinService.GetAllCheckinsByDateAsync(userId, parsedDate);
+
+                _logger.LogInformation("Found {Count} check-ins for user {UserId} on date {Date}", checkins.Count, userId, parsedDate);
+                return Ok(checkins);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving check-ins for date {Date}", date);
+                return StatusCode(500, new { message = "An error occurred while retrieving the check-ins" });
+            }
+        }
+
+        /// <summary>
+        /// Get most recent check-in for a specific date
+        /// </summary>
+        /// <param name="date">Date in YYYY-MM-DD format</param>
+        /// <returns>Most recent check-in for the specified date</returns>
+        /// <response code="200">Check-in found and returned</response>
+        /// <response code="400">Invalid date format</response>
+        /// <response code="401">Unauthorized - invalid or missing JWT token</response>
+        /// <response code="404">No check-in found for the specified date</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("date/{date}/latest")]
+        [ProducesResponseType(typeof(CheckinResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<CheckinResponse>> GetLatestCheckinByDate(string date)
+        {
+            try
+            {
+                if (!DateOnly.TryParse(date, out DateOnly parsedDate))
+                {
+                    _logger.LogWarning("Invalid date format provided: {Date}", date);
+                    return BadRequest(new { message = "Invalid date format. Use YYYY-MM-DD format." });
+                }
+
+                var userId = GetUserIdFromClaims();
+                _logger.LogInformation("Retrieving latest check-in for user {UserId} on date {Date}", userId, parsedDate);
 
                 var checkin = await _checkinService.GetCheckinByDateAsync(userId, parsedDate);
 
@@ -121,7 +187,7 @@ namespace MomentumAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving check-in for date {Date}", date);
+                _logger.LogError(ex, "Error retrieving latest check-in for date {Date}", date);
                 return StatusCode(500, new { message = "An error occurred while retrieving the check-in" });
             }
         }

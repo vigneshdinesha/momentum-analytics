@@ -20,6 +20,42 @@ namespace MomentumAPI.Services
         }
 
         /// <summary>
+        /// Creates a new check-in (allows multiple per day)
+        /// </summary>
+        /// <param name="userId">ID of the user creating the check-in</param>
+        /// <param name="request">Check-in data to create</param>
+        /// <returns>The created check-in response</returns>
+        public async Task<CheckinResponse> CreateCheckinAsync(int userId, CheckinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Creating new check-in for user {UserId} on date {Date}", userId, request.Date);
+                
+                // Create new check-in (allow multiple per day)
+                var checkin = new ManualCheckin
+                {
+                    UserId = userId,
+                    Date = request.Date,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                UpdateCheckinFromRequest(checkin, request);
+
+                _context.ManualCheckins.Add(checkin);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully created check-in {CheckinId} for user {UserId}", checkin.Id, userId);
+                return MapToResponse(checkin);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating check-in for user {UserId} on date {Date}", userId, request.Date);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Creates a new check-in or updates existing one if date already exists for the user (UPSERT pattern)
         /// </summary>
         /// <param name="userId">ID of the user creating/updating the check-in</param>
@@ -76,7 +112,7 @@ namespace MomentumAPI.Services
         }
 
         /// <summary>
-        /// Retrieves a check-in for a specific user and date
+        /// Retrieves a check-in for a specific user and date (returns the most recent one if multiple exist)
         /// </summary>
         /// <param name="userId">ID of the user who owns the check-in</param>
         /// <param name="date">Date of the check-in to retrieve</param>
@@ -85,11 +121,13 @@ namespace MomentumAPI.Services
         {
             try
             {
-                _logger.LogInformation("Retrieving check-in for user {UserId} on date {Date}", userId, date);
+                _logger.LogInformation("Retrieving most recent check-in for user {UserId} on date {Date}", userId, date);
 
                 var checkin = await _context.ManualCheckins
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.UserId == userId && c.Date == date);
+                    .Where(c => c.UserId == userId && c.Date == date)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .FirstOrDefaultAsync();
 
                 if (checkin == null)
                 {
@@ -103,6 +141,66 @@ namespace MomentumAPI.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving check-in for user {UserId} on date {Date}", userId, date);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all check-ins for a specific user and date
+        /// </summary>
+        /// <param name="userId">ID of the user who owns the check-ins</param>
+        /// <param name="date">Date of the check-ins to retrieve</param>
+        /// <returns>List of check-in responses for the specified date</returns>
+        public async Task<List<CheckinResponse>> GetAllCheckinsByDateAsync(int userId, DateOnly date)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving all check-ins for user {UserId} on date {Date}", userId, date);
+
+                var checkins = await _context.ManualCheckins
+                    .AsNoTracking()
+                    .Where(c => c.UserId == userId && c.Date == date)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToListAsync();
+
+                _logger.LogInformation("Found {Count} check-ins for user {UserId} on date {Date}", checkins.Count, userId, date);
+                return checkins.Select(MapToResponse).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all check-ins for user {UserId} on date {Date}", userId, date);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves a check-in by its ID
+        /// </summary>
+        /// <param name="userId">ID of the user who owns the check-in (security check)</param>
+        /// <param name="id">ID of the check-in to retrieve</param>
+        /// <returns>Check-in response if found and user owns it, null otherwise</returns>
+        public async Task<CheckinResponse?> GetCheckinByIdAsync(int userId, int id)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving check-in {CheckinId} for user {UserId}", id, userId);
+
+                var checkin = await _context.ManualCheckins
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+                if (checkin == null)
+                {
+                    _logger.LogInformation("Check-in {CheckinId} not found for user {UserId} or user doesn't own it", id, userId);
+                    return null;
+                }
+
+                _logger.LogInformation("Found check-in {CheckinId} for user {UserId}", id, userId);
+                return MapToResponse(checkin);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving check-in {CheckinId} for user {UserId}", id, userId);
                 throw;
             }
         }
