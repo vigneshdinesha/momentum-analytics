@@ -179,19 +179,20 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-white mb-3">
             {isEditing ? 'Edit Check-in' : 'New Check-in'}
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="text-slate-400 text-lg mb-4">
             {isEditing ? 
               'Update your health and productivity metrics' : 
               'Track your daily metrics to optimize your health and productivity'
             }
           </p>
-          <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+          <div className="flex items-center justify-center space-x-4 text-sm text-slate-500 bg-slate-800/30 border border-slate-700/30 rounded-lg px-4 py-2 inline-flex">
             <span>Date: {new Date(formData.date).toLocaleDateString()}</span>
             <span>•</span>
             <span>Time: {new Date().toLocaleTimeString()}</span>
@@ -200,16 +201,16 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
 
         {/* Show today's existing check-ins if creating new */}
         {!isEditing && existingCheckins.length > 0 && (
-          <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-blue-900 mb-2">
+          <div className="mb-8 bg-blue-600/20 border border-blue-500/30 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-blue-200 mb-4">
               Today's Check-ins ({existingCheckins.length})
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {existingCheckins.map((checkin, index) => (
-                <div key={checkin.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                <div key={checkin.id} className="flex items-center justify-between bg-slate-800/40 p-4 rounded-lg border border-slate-700/30">
                   <div>
-                    <span className="text-sm font-medium">Check-in #{index + 1}</span>
-                    <span className="text-xs text-gray-500 ml-2">
+                    <span className="text-sm font-medium text-white">Check-in #{index + 1}</span>
+                    <span className="text-xs text-slate-400 ml-2">
                       {new Date(checkin.createdAt).toLocaleTimeString()}
                     </span>
                   </div>
@@ -218,7 +219,7 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                     onClick={() => {
                       navigate(`/checkin/${checkin.id}`);
                     }}
-                    className="text-blue-600 text-sm hover:text-blue-800"
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                   >
                     Edit
                   </button>
@@ -229,26 +230,33 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
+          <div className="mb-6 bg-red-900/20 border border-red-700 text-red-300 px-6 py-4 rounded-xl">
+            <div className="flex items-center">
+              <span className="text-red-400 mr-3">⚠</span>
+              {error}
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-            {success}
+          <div className="mb-6 bg-emerald-900/20 border border-emerald-700 text-emerald-300 px-6 py-4 rounded-xl">
+            <div className="flex items-center">
+              <span className="text-emerald-400 mr-3">✓</span>
+              {success}
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Sleep Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              🛏️ Sleep
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">🛏️</span>
+              Sleep
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Sleep Hours
                 </label>
                 <input
@@ -258,36 +266,38 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   max="24"
                   value={formData.sleepHours || ''}
                   onChange={handleInputChange('sleepHours')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="8.0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sleep Quality (1-10): {formData.sleepQuality || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Sleep Quality (1-10): <span className="text-blue-400 font-semibold">{formData.sleepQuality || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.sleepQuality || 1}
-                  onChange={handleSliderChange('sleepQuality')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Poor</span>
-                  <span>Excellent</span>
+                <div className="space-y-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.sleepQuality || 1}
+                    onChange={handleSliderChange('sleepQuality')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Poor</span>
+                    <span>Excellent</span>
+                  </div>
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Sleep Notes
                 </label>
                 <textarea
                   value={formData.sleepNotes || ''}
                   onChange={handleInputChange('sleepNotes')}
-                  rows={2}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  rows={3}
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all resize-none"
                   placeholder="Any sleep-related observations..."
                   maxLength={500}
                 />
@@ -296,119 +306,142 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
           </div>
 
           {/* Energy Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              ⚡ Energy Levels
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">⚡</span>
+              Energy Levels
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Morning Energy (1-10): {formData.energyMorning || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Morning Energy: <span className="text-blue-400 font-semibold">{formData.energyMorning || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.energyMorning || 5}
-                  onChange={handleSliderChange('energyMorning')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.energyMorning || 5}
+                    onChange={handleSliderChange('energyMorning')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>1</span>
+                    <span>10</span>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Afternoon Energy (1-10): {formData.energyAfternoon || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Afternoon Energy: <span className="text-blue-400 font-semibold">{formData.energyAfternoon || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.energyAfternoon || 5}
-                  onChange={handleSliderChange('energyAfternoon')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.energyAfternoon || 5}
+                    onChange={handleSliderChange('energyAfternoon')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>1</span>
+                    <span>10</span>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Evening Energy (1-10): {formData.energyEvening || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Evening Energy: <span className="text-blue-400 font-semibold">{formData.energyEvening || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.energyEvening || 5}
-                  onChange={handleSliderChange('energyEvening')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.energyEvening || 5}
+                    onChange={handleSliderChange('energyEvening')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>1</span>
+                    <span>10</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Mood & Stress Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              😊 Mood & Stress
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">😊</span>
+              Mood & Stress
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Mood
                 </label>
                 <select
                   value={formData.mood || ''}
                   onChange={handleInputChange('mood')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 >
                   <option value="">Select mood...</option>
                   {MOOD_OPTIONS.map(mood => (
-                    <option key={mood.value} value={mood.value}>
+                    <option key={mood.value} value={mood.value} className="bg-slate-800">
                       {mood.label}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Stress Level (1-10): {formData.stressLevel || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Stress Level: <span className="text-blue-400 font-semibold">{formData.stressLevel || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.stressLevel || 5}
-                  onChange={handleSliderChange('stressLevel')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Low</span>
-                  <span>High</span>
+                <div className="space-y-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.stressLevel || 5}
+                    onChange={handleSliderChange('stressLevel')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Low</span>
+                    <span>High</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Exercise Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              🏃‍♂️ Exercise
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">🏃‍♂️</span>
+              Exercise
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Exercise Type
                 </label>
                 <select
                   value={formData.exerciseType || ''}
                   onChange={handleInputChange('exerciseType')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 >
                   <option value="">No exercise</option>
                   {EXERCISE_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type} className="bg-slate-800">{type}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Duration (minutes)
                 </label>
                 <input
@@ -416,34 +449,41 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   min="0"
                   value={formData.exerciseDuration || ''}
                   onChange={handleInputChange('exerciseDuration')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="30"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Intensity (1-10): {formData.exerciseIntensity || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Intensity: <span className="text-blue-400 font-semibold">{formData.exerciseIntensity || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.exerciseIntensity || 5}
-                  onChange={handleSliderChange('exerciseIntensity')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.exerciseIntensity || 5}
+                    onChange={handleSliderChange('exerciseIntensity')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>1</span>
+                    <span>10</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Nutrition & Habits Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              🥗 Nutrition & Habits
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">🥗</span>
+              Nutrition & Habits
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Water Glasses
                 </label>
                 <input
@@ -451,12 +491,12 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   min="0"
                   value={formData.waterGlasses || ''}
                   onChange={handleInputChange('waterGlasses')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="8"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Caffeine (mg)
                 </label>
                 <input
@@ -464,32 +504,35 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   min="0"
                   value={formData.caffeineMg || ''}
                   onChange={handleInputChange('caffeineMg')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="95"
                 />
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.ateBreakfast || false}
-                  onChange={handleInputChange('ateBreakfast')}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 block text-sm font-medium text-gray-700">
-                  Ate Breakfast
+              <div className="flex items-center justify-center">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.ateBreakfast || false}
+                    onChange={handleInputChange('ateBreakfast')}
+                    className="w-5 h-5 text-blue-600 bg-slate-900/50 border border-slate-600/50 rounded focus:ring-blue-500/50 focus:ring-2"
+                  />
+                  <span className="text-sm font-medium text-slate-300">
+                    Ate Breakfast
+                  </span>
                 </label>
               </div>
             </div>
           </div>
 
           {/* Productivity Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              📊 Productivity
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">📊</span>
+              Productivity
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Deep Work Hours
                 </label>
                 <input
@@ -499,25 +542,31 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   max="24"
                   value={formData.deepWorkHours || ''}
                   onChange={handleInputChange('deepWorkHours')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="4.0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Productivity Rating (1-10): {formData.productivityRating || 'Not set'}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Productivity Rating: <span className="text-blue-400 font-semibold">{formData.productivityRating || 'Not set'}</span>
                 </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.productivityRating || 5}
-                  onChange={handleSliderChange('productivityRating')}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.productivityRating || 5}
+                    onChange={handleSliderChange('productivityRating')}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-blue"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>1</span>
+                    <span>10</span>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-3">
                   Screen Time Before Bed (minutes)
                 </label>
                 <input
@@ -525,7 +574,7 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
                   min="0"
                   value={formData.screenTimeBeforeBed || ''}
                   onChange={handleInputChange('screenTimeBeforeBed')}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   placeholder="30"
                 />
               </div>
@@ -533,39 +582,45 @@ const CheckinForm: React.FC<CheckinFormProps> = ({ checkinId, initialData }) => 
           </div>
 
           {/* Notes Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              📝 Additional Notes
+          <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <span className="text-2xl mr-3">📝</span>
+              Additional Notes
             </h2>
-            <textarea
-              value={formData.notes || ''}
-              onChange={handleInputChange('notes')}
-              rows={4}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Any additional observations, thoughts, or notes about your day..."
-              maxLength={1000}
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              {(formData.notes?.length || 0)}/1000 characters
-            </p>
+            <div className="space-y-3">
+              <textarea
+                value={formData.notes || ''}
+                onChange={handleInputChange('notes')}
+                rows={4}
+                className="w-full bg-slate-900/50 border border-slate-600/50 rounded-lg py-4 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all resize-none"
+                placeholder="Any additional observations, thoughts, or notes about your day..."
+                maxLength={1000}
+              />
+              <p className="text-sm text-slate-400">
+                {(formData.notes?.length || 0)}/1000 characters
+              </p>
+            </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center space-x-4">
+          <div className="flex justify-center space-x-4 pt-4">
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="py-3 px-6 border border-slate-600/50 rounded-lg font-medium text-slate-300 bg-slate-800/40 hover:bg-slate-700/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="py-3 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-blue-500/25"
             >
               {loading ? 
-                (isEditing ? 'Updating...' : 'Submitting...') : 
+                <span className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isEditing ? 'Updating...' : 'Submitting...'}
+                </span> : 
                 (isEditing ? 'Update Check-in' : 'Submit Check-in')
               }
             </button>

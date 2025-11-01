@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { tokenStorage } from "../utils/tokenStorage";
 import CheckinService from "../services/checkinService";
 import type { CheckinResponse } from "../types/checkin";
+import MiniTrendWidget from "../components/MiniTrendWidget";
 
 interface DashboardPageProps {
   userName?: string;
@@ -56,160 +57,310 @@ export default function Dashboard({ userName, onLogout }: DashboardPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between py-8 border-b border-slate-700/30">
           <div>
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-3xl font-bold text-white mb-1">
               Welcome back, {displayName}!
             </h1>
-            <p className="text-gray-400 text-sm mt-1">Your Momentum dashboard</p>
+            <p className="text-slate-400 font-medium">Your Momentum dashboard</p>
           </div>
           <button
             onClick={handleLogout}
-            className="border border-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            className="mt-4 md:mt-0 bg-slate-800/40 hover:bg-slate-700/60 text-slate-400 hover:text-white px-4 py-2 rounded-lg border border-slate-600/20 transition-all duration-200 font-medium"
           >
             Logout
-          </button>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
+            </button>
           </div>
-        )}
 
-        {/* Main Content Card */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Dashboard</h2>
-          
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-red-900/20 border border-red-700 text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm animate-slide-up">
+              <div className="flex items-center">
+                <span className="text-red-400 mr-3">⚠</span>
+                {error}
+              </div>
+            </div>
+          )}
+
+        {/* Main Content */}
+        <div className="py-6">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#06b6d4]"></div>
-              <span className="ml-2 text-gray-600">Loading...</span>
+            <div className="flex items-center justify-center py-20">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-slate-700"></div>
+              </div>
+              <span className="ml-4 text-white text-lg font-medium">Loading your dashboard...</span>
             </div>
           ) : (
-            <>
-              <div className="mb-6">
-                <p className="text-gray-600 mb-4">
+            <div className="space-y-8">
+              {/* Action Bar */}
+              <div className="text-center py-8">
+                <p className="text-slate-400 mb-8 text-lg max-w-2xl mx-auto">
                   Track your daily health metrics and optimize your performance.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap justify-center gap-4">
                   <button 
                     onClick={() => navigate('/checkin')}
-                    className="bg-[#06b6d4] text-white px-6 py-3 rounded-md font-medium hover:bg-[#0891b2] transition-colors"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
                   >
+                    <span className="mr-2">📝</span>
                     Add New Check-in
                   </button>
+                  <button 
+                    onClick={() => navigate('/analytics')}
+                    className="bg-blue-600/80 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg"
+                  >
+                    <span className="mr-2">📊</span>
+                    View Analytics
+                  </button>
                   {hasCheckedInToday && (
-                    <div className="flex items-center text-green-700 bg-green-50 px-4 py-3 rounded-md">
+                    <div className="flex items-center text-blue-200 bg-blue-600/20 border border-blue-500/30 px-4 py-3 rounded-lg">
                       <span className="text-lg mr-2">✅</span>
-                      <span className="text-sm font-medium">Checked in today</span>
+                      <span className="font-medium text-sm">Checked in today</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Quick Stats */}
-              {recentCheckins.length > 0 && (
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">This Week</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">{recentCheckins.length}</div>
-                      <div className="text-blue-800 text-sm">Check-ins</div>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
-                        {Math.round(recentCheckins.reduce((sum, c) => sum + (c.productivityRating || 0), 0) / recentCheckins.length) || 0}
+              {/* Main Dashboard Content */}
+              {recentCheckins.length > 0 ? (
+                <div className="space-y-10">
+                  {/* Quick Stats Cards */}
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-8">This Week's Performance</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-6 hover:bg-slate-800/60 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <span className="text-xl">📊</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">{recentCheckins.length}</div>
+                            <div className="text-slate-400 text-sm font-medium">Check-ins</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {recentCheckins.length >= 5 ? 'Excellent consistency!' : 'Keep it up!'}
+                        </div>
                       </div>
-                      <div className="text-green-800 text-sm">Avg Productivity</div>
-                    </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {Math.round(recentCheckins.reduce((sum, c) => sum + (c.sleepHours || 0), 0) / recentCheckins.length * 10) / 10 || 0}h
+
+                      <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-6 hover:bg-slate-800/60 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <span className="text-xl">🚀</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">
+                              {Math.round(recentCheckins.reduce((sum, c) => sum + (c.productivityRating || 0), 0) / recentCheckins.length) || 0}/10
+                            </div>
+                            <div className="text-slate-400 text-sm font-medium">Avg Productivity</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {Math.round(recentCheckins.reduce((sum, c) => sum + (c.productivityRating || 0), 0) / recentCheckins.length) >= 7 ? 'Outstanding!' : 'Room to improve'}
+                        </div>
                       </div>
-                      <div className="text-purple-800 text-sm">Avg Sleep</div>
+
+                      <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-6 hover:bg-slate-800/60 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <span className="text-xl">😴</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">
+                              {Math.round(recentCheckins.reduce((sum, c) => sum + (c.sleepHours || 0), 0) / recentCheckins.length * 10) / 10 || 0}h
+                            </div>
+                            <div className="text-slate-400 text-sm font-medium">Avg Sleep</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {Math.round(recentCheckins.reduce((sum, c) => sum + (c.sleepHours || 0), 0) / recentCheckins.length * 10) / 10 >= 7 ? 'Well rested!' : 'Need more sleep'}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-6 hover:bg-slate-800/60 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <span className="text-xl">⚡</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">
+                              {Math.round(recentCheckins.reduce((sum, c) => {
+                                const avgEnergy = ((c.energyMorning || 0) + (c.energyAfternoon || 0) + (c.energyEvening || 0)) / 3;
+                                return sum + avgEnergy;
+                              }, 0) / recentCheckins.length * 10) / 10 || 0}/10
+                            </div>
+                            <div className="text-slate-400 text-sm font-medium">Avg Energy</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {Math.round(recentCheckins.reduce((sum, c) => {
+                            const avgEnergy = ((c.energyMorning || 0) + (c.energyAfternoon || 0) + (c.energyEvening || 0)) / 3;
+                            return sum + avgEnergy;
+                          }, 0) / recentCheckins.length * 10) / 10 >= 7 ? 'High energy!' : 'Boost needed'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mini Trend Widgets */}
+                  {recentCheckins.length >= 3 && (
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-8">Recent Trends</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <MiniTrendWidget
+                          checkins={recentCheckins}
+                          metricKey="sleepHours"
+                          title="Sleep Hours"
+                          color="#3b82f6"
+                        />
+                        <MiniTrendWidget
+                          checkins={recentCheckins}
+                          metricKey="energyMorning"
+                          title="Energy Level"
+                          color="#60a5fa"
+                        />
+                        <MiniTrendWidget
+                          checkins={recentCheckins}
+                          metricKey="productivityRating"
+                          title="Productivity"
+                          color="#2563eb"
+                        />
+                        <MiniTrendWidget
+                          checkins={recentCheckins}
+                          metricKey="sleepQuality"
+                          title="Sleep Quality"
+                          color="#1d4ed8"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Smart Insights */}
+                  <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <span className="text-xl">💡</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-white mb-2">Personalized Insights</h3>
+                        <p className="text-slate-300 leading-relaxed">
+                          {recentCheckins.length >= 5 ? (
+                            <>
+                              <span className="text-blue-400 font-medium">Excellent consistency!</span> You've logged {recentCheckins.length} check-ins this week. 
+                              Your dedication to tracking is building valuable insights.
+                            </>
+                          ) : recentCheckins.length >= 3 ? (
+                            <>
+                              <span className="text-blue-400 font-medium">Good progress!</span> You've completed {recentCheckins.length} check-ins. 
+                              Try to maintain daily tracking for more powerful insights.
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-blue-400 font-medium">Just getting started!</span> You have {recentCheckins.length} check-in{recentCheckins.length !== 1 ? 's' : ''}. 
+                              Daily tracking will unlock powerful pattern recognition.
+                            </>
+                          )}
+                        </p>
+                        <button 
+                          className="mt-3 text-blue-400 hover:text-blue-300 font-medium flex items-center group transition-colors"
+                          onClick={() => navigate('/analytics')}
+                        >
+                          Explore detailed analytics 
+                          <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ) : (
+                /* Empty State */
+                <div className="text-center py-16">
+                  <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-8 max-w-lg mx-auto">
+                    <div className="text-4xl mb-4">🚀</div>
+                    <h3 className="text-xl font-bold text-white mb-3">Start Your Journey</h3>
+                    <p className="text-slate-400 mb-6">
+                      Welcome to Momentum! Track your daily health metrics to unlock personalized insights 
+                      and optimize your performance.
+                    </p>
+                    <button
+                      onClick={() => navigate('/checkin')}
+                      className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-lg"
+                    >
+                      <span className="mr-2">📝</span>
+                      Create Your First Check-in
+                    </button>
+                  </div>
+                </div>
               )}
-            </>
+            </div>
           )}
         </div>
 
         {/* Recent Check-ins Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Recent Check-ins</h2>
-          
-          {loading ? (
-            <div className="bg-white/10 border border-gray-700 rounded-lg p-8">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                <span className="ml-2 text-gray-300">Loading check-ins...</span>
-              </div>
-            </div>
-          ) : recentCheckins.length === 0 ? (
-            <div className="bg-white/10 border border-gray-700 rounded-lg p-8">
-              <p className="text-gray-400 text-center">
-                No check-ins yet. Add your first one!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentCheckins.map((checkin) => {
+        {recentCheckins.length > 0 && (
+          <div className="border-t border-slate-700/30 pt-8 mt-8">
+            <h3 className="text-lg font-semibold text-white mb-6">Recent Check-ins</h3>
+            
+            <div className="space-y-3">
+              {recentCheckins.slice(0, 5).map((checkin) => {
                 const formatted = CheckinService.formatCheckinForDisplay(checkin);
                 return (
-                  <div key={checkin.id} className="bg-white/10 border border-gray-700 rounded-lg p-6">
-                    <div className="flex items-start justify-between mb-3">
+                  <div key={checkin.id} className="bg-slate-800/20 border border-slate-700/20 rounded-lg p-4 hover:bg-slate-800/30 transition-all duration-200">
+                    <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h3 className="text-white font-medium">{formatted.date}</h3>
-                        <p className="text-gray-300 text-sm">{formatted.summary}</p>
+                        <h4 className="text-white font-medium text-sm">{formatted.date}</h4>
+                        <p className="text-slate-400 text-xs">{formatted.summary}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-400">
-                          {new Date(checkin.createdAt).toLocaleTimeString()}
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xs text-slate-500">
+                          {new Date(checkin.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                         <button
                           onClick={() => navigate(`/checkin/${checkin.id}`)}
-                          className="text-[#06b6d4] text-sm hover:text-[#0891b2] font-medium"
+                          className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
                         >
                           Edit
                         </button>
                       </div>
                     </div>
                     
-                    {/* Key metrics grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    {/* Compact metrics */}
+                    <div className="grid grid-cols-4 gap-3 text-xs">
                       {Object.entries(formatted.details).slice(0, 4).map(([key, value]) => (
                         <div key={key} className="text-center">
-                          <div className="text-gray-400">{key}</div>
-                          <div className="text-white font-medium">{value}</div>
+                          <div className="text-slate-500">{key}</div>
+                          <div className="text-slate-300 font-medium">{value}</div>
                         </div>
                       ))}
                     </div>
                     
                     {checkin.notes && (
-                      <div className="mt-4 pt-4 border-t border-gray-600">
-                        <p className="text-gray-300 text-sm italic">"{checkin.notes}"</p>
+                      <div className="mt-3 pt-3 border-t border-slate-700/20">
+                        <p className="text-slate-400 text-xs italic">"{checkin.notes}"</p>
                       </div>
                     )}
                   </div>
                 );
               })}
               
-              {recentCheckins.length >= 7 && (
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm">
-                    Showing last 7 check-ins. More analytics coming soon!
-                  </p>
+              {recentCheckins.length > 5 && (
+                <div className="text-center pt-2">
+                  <button 
+                    onClick={() => navigate('/analytics')}
+                    className="text-slate-500 hover:text-slate-400 text-xs font-medium transition-colors"
+                  >
+                    View all check-ins in analytics →
+                  </button>
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
