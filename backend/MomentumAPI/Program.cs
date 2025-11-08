@@ -134,17 +134,27 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Run database migrations on startup
-using (var scope = app.Services.CreateScope())
+try 
 {
-    try 
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+    // Test database connection first
+    app.Logger.LogInformation("Testing database connection...");
+    await context.Database.CanConnectAsync();
+    app.Logger.LogInformation("Database connection successful");
+    
+    // Run migrations
+    app.Logger.LogInformation("Running database migrations...");
+    await context.Database.MigrateAsync();
+    app.Logger.LogInformation("Database migrations completed successfully");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Database setup failed: {Message}", ex.Message);
+    // Don't throw in production - let app start without DB for debugging
+    if (app.Environment.IsDevelopment())
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        context.Database.Migrate();
-        app.Logger.LogInformation("Database migrations completed successfully");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while migrating the database");
         throw;
     }
 }
