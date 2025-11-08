@@ -10,6 +10,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure port for Azure App Service
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
