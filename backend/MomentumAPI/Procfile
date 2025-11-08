@@ -1,0 +1,2 @@
+# Azure deployment configuration
+web: dotnet MomentumAPI.dll --urls http://0.0.0.0:$PORT
