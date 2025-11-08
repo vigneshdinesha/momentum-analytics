@@ -133,22 +133,35 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Run database migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    try 
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate();
+        app.Logger.LogInformation("Database migrations completed successfully");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while migrating the database");
+        throw;
+    }
+}
+
 // Configure the HTTP request pipeline
 
 // Global error handling middleware (should be first)
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-// Development-specific middleware
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments for now
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Momentum Analytics API v1");
-        options.RoutePrefix = string.Empty; // Serve Swagger at root
-        options.DocumentTitle = "Momentum Analytics API";
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Momentum Analytics API v1");
+    options.RoutePrefix = "swagger"; // Serve Swagger at /swagger
+    options.DocumentTitle = "Momentum Analytics API";
+});
 
 // HTTPS redirection
 app.UseHttpsRedirection();
@@ -177,9 +190,6 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
-}
-finally
-{
-    Log.CloseAndFlush();
+    app.Logger.LogCritical(ex, "Application terminated unexpectedly");
+    throw;
 }
