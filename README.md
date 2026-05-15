@@ -6,8 +6,3 @@ Personal optimization platform for tracking health metrics and discovering patte
 - Backend: .NET 8 Web API
 - Frontend: React + TypeScript + Vite
 - Database: PostgreSQL 15
-
-## Status
-Sprint 1: In Progress ⚙️
-# Deployment test
-# Deploy with secrets
